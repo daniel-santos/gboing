@@ -44,7 +44,7 @@
 
 /* Discontinue quicksort algorithm when partition gets below this size.
    This particular magic number was chosen to work best on a Sun 4/260. */
-#define MAX_THRESH 4
+#define GLIBC_MAX_THRESH 4
 
 /* Stack node declarations used to store unfulfilled partition obligations. */
 typedef struct
@@ -55,7 +55,7 @@ typedef struct
 
 /* The next 4 #defines implement a very fast in-line stack abstraction. */
 /* The stack needs log (total_elements) entries (we could even subtract
-   log(MAX_THRESH)).  Since total_elements has type size_t, we get as
+   log(GLIBC_MAX_THRESH)).  Since total_elements has type size_t, we get as
    upper bound for log (total_elements):
    bits per byte (CHAR_BIT) * sizeof(size_t).  */
 #define STACK_SIZE	(CHAR_BIT * sizeof(size_t))
@@ -78,8 +78,8 @@ typedef struct
       This reduces the probability of selecting a bad pivot value and
       eliminates certain extraneous comparisons.
 
-   3. Only quicksorts TOTAL_ELEMS / MAX_THRESH partitions, leaving
-      insertion sort to order the MAX_THRESH items within each partition.
+   3. Only quicksorts TOTAL_ELEMS / GLIBC_MAX_THRESH partitions, leaving
+      insertion sort to order the GLIBC_MAX_THRESH items within each partition.
       This is a big win, since insertion sort is faster for small, mostly
       sorted array segments.
 
@@ -94,13 +94,13 @@ _quicksort (void *const pbase, size_t total_elems, size_t size,
 {
   register char *base_ptr = (char *) pbase;
 
-  const size_t max_thresh = MAX_THRESH * size;
+  const size_t max_thresh = GLIBC_MAX_THRESH * size;
 
   if (total_elems == 0)
     /* Avoid lossage with unsigned arithmetic below.  */
     return;
 
-  if (total_elems > MAX_THRESH)
+  if (total_elems > GLIBC_MAX_THRESH)
     {
       char *lo = base_ptr;
       char *hi = &lo[size * (total_elems - 1)];
@@ -199,7 +199,7 @@ _quicksort (void *const pbase, size_t total_elems, size_t size,
 
   /* Once the BASE_PTR array is partially sorted by quicksort the rest
      is completely sorted using insertion sort, since this is efficient
-     for partitions below MAX_THRESH size. BASE_PTR points to the beginning
+     for partitions below GLIBC_MAX_THRESH size. BASE_PTR points to the beginning
      of the array to sort, and END_PTR points at the very last element in
      the array (*not* one beyond it!). */
 

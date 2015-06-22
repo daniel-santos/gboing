@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# FIXME: only tested on gcc (sure to break elsewhere)
+
+((GBOING_SCRIPTS_SOURCED)) || . $(dirname "$0")/gboing.sh || exit 1
+
+# printVarsFromList "PATH LOGNAME"
+#exit
+# Make sure we have a valid CC
+((${#CC})) || export CC=$(which cc)
+test -x "${CC}" || test -x $(which "${CC}") || die "bad CC value: '${CC}'"
+typeset -i test_set_id=$1
+(($# == 1)) || assert
+
+# determine version
+# FIXME: gcc only?
+version=$("${CC}" -dumpversion)
+test -n "${version}" || die "failed to get compiler version"
+
+# FIXME: gcc only?
+target=$("${CC}" ${CPPFLAGS} ${CFLAGS} -dumpmachine)
+test -n "${target}" || die "failed to get compiler target"
+
+# FIXME: seriously stupid...
+if basename "${CC}" | grep 'gcc' > /dev/null; then
+    name=gcc
+    vendor=fsf
+elif basename "${CC}" | grep -i 'icc' > /dev/null; then
+    name=icc
+    vendor=intel
+elif basename "${CC}" | grep -i 'aCC' > /dev/null; then
+    name=aCC
+    vendor=HP
+elif basename "${CC}" | grep -i 'cl.exe' > /dev/null; then
+    name=cl.exe
+    vendor=microbitch
+else
+    name=dunno
+    vendor=dunno
+fi
+
+env=$(printVarsFromList "${for_each_var_all_names}")
+
+printf "INSERT INTO Compilers (
+    testSetId, name, version, host, target, cc, env
+) VALUES (
+    %u, %s, %s, %s, %s, %s, %s
+);\n\n" $1 \
+    "$(escapeSqlStringOrNull "${name}")" \
+    "$(escapeSqlStringOrNull "${version}")" \
+    "$(escapeSqlStringOrNull "${HOST}")" \
+    "$(escapeSqlStringOrNull "${target}")" \
+    "$(escapeSqlStringOrNull "${CC}")" \
+    "$(escapeSqlStringOrNull "${env}")"
+
+
+exit
+CREATE TABLE Compilers (
+    id          integer         primary key AUTOINCREMENT,
+/*  vendor      varchar(64)     not null,*/
+    name        varchar(64)     not null,
+    version     varchar(64)     not null,
+    host        varchar(128),
+    target      varchar(128),
+    cc          varchar(255),
+    env         text
+);
+

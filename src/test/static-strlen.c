@@ -1,5 +1,7 @@
 /*
- * static_strlen - example compile-time strlen implementation
+ * static-strlen.c - demo compile-time strlen implementation (not actually
+ *                   practical since gcc replaces such strlen calls with a
+ *                   constant anyway)
  * Copyright (C) 2014 Daniel Santos <daniel.santos@pobox.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -101,7 +103,9 @@ add_zero:
 }
 
 #if 0
-/* smaller version not using macros for illustrative purposes */
+/* for illustrative purposes, this is a version that doesn't use macros, but
+ * has a much lower max size threshold
+ */
 static __always_inline size_t static_strlen(const char *s) {
 	size_t i = 512;
 

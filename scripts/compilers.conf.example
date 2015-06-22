@@ -1,0 +1,21 @@
+#!/bin/bash
+
+CPPFLAGS="-DNDEBUG"
+CFLAGS="-O2 -march=native -g -Wall -Wextra -Wcast-align -Wno-unused-parameter -Werror"
+CC=/usr/bin/x86_64-pc-linux-gnu-gcc-
+BINUTILS_PREFIX=/usr/x86_64-pc-linux-gnu/binutils-bin/2.25/
+HOST=x86_64-pc-linux-gnu
+TARGET=x86_64-pc-linux-gnu
+
+for_each_var_mode[CC]=append
+for_each_var_join_delim[CC]=
+for_each_var_count=2
+
+for_each_vars=(
+    [0,CC]=4.9.2
+    [0,CFLAGS]="-march=native -flto"
+
+    [1,CC]=4.8.4
+    [1,CFLAGS]="-march=native -flto"
+)
+

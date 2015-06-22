@@ -20,7 +20,7 @@ AC_PROG_MAKE_SET
 
 # Checks for header files.
 AC_FUNC_ALLOCA
-AC_CHECK_HEADERS([fcntl.h inttypes.h limits.h stddef.h stdint.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([assert.h fcntl.h inttypes.h limits.h stddef.h stdint.h stdlib.h string.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE

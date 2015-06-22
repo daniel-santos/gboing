@@ -20,13 +20,15 @@ rm -f ${auxdir}/ltmain.sh
 rm -f ${auxdir}/{config.guess,config.sub,depcomp,install-sh,missing}
 rm -f {,src/lib/,src/test/}Makefile.in
 
-rmdir ${auxdir} 2>/dev/null
+rm -f $(find ${auxdir} m4 -type l 2>/dev/null)
+rmdir ${auxdir} m4 2>/dev/null
 
 if [[ "$1" == clean ]]; then
 	exit 0
 fi
 
 mkdir ${auxdir} m4 2>/dev/null
+touch NEWS ChangeLog
 
 aclocal
 autoheader

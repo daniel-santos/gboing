@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo
+for var in ${for_each_var_all_names}; do
+    eval eval val="\"\"\$\{${var}\}\"\""
+
+    # Skip unassigned / empty variables
+    ((${#val})) || continue;
+
+    printf "%s=\"%s\"\n" "${var}" "${val}"
+done

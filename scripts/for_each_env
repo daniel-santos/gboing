@@ -1,0 +1,78 @@
+#!/bin/bash
+
+if [[ -z "${GBOING_SCRIPTS_SOURCED}" ]]; then
+    . $(dirname "$0")/gboing.sh || exit 1
+fi
+
+showUsage() {
+    local argv0="$1"
+
+    (($#)) || assert
+    shift
+
+    if (($#)); then
+        echo "${BAD}ERROR${NORMAL}$: $*"
+        echo
+    fi
+
+    echo "Usage: $argv0 [-c <cfg> [-c <cfg> [...]] <next_program>"
+    echo "       This usage info is incomplete!!!"
+    exit 2
+}
+
+main() {
+    declare -i num_vars=0
+
+    while getopts "c:h" arg; do
+        case ${arg} in
+            c) . "${OPTARG}" || die "Failed reading config file ${OPTARG}";;
+            ?|h) showUsage "$0" >&2;;
+        esac
+    done
+
+    shift $((OPTIND-1))
+    (($# >= 1)) || showUsage "$0" "no 'next_program' argument passed!" >&2
+
+    # Validate variables set in config file
+    ((${#for_each_var_names[0]}))|| die "for_each_var_names undefined"
+
+    ((${#for_each_var_count} && for_each_var_count > 0)) ||
+        die "for_each_var_count not set or zero"
+
+    for ((num_vars = 0; 1; ++num_vars)); do
+        #echo num_vars=$num_vars >&2
+
+        var_name=${for_each_var_names[${num_vars}]}
+        #echo var_name=${var_name} >&2
+
+        # Detect end of variable list
+        ((${#var_name})) || break
+
+        var_mode=${for_each_var_mode[${var_name}]}
+        ((${#var_mode})) || die "for_each_var_mode[${var_name}] is" \
+                    "undefined."
+        #echo "var_name=${var_name}, mode=${var_mode}, value=${for_each_vars[${var_name}]}" >&2
+
+        case ${var_mode} in
+            set|append|prepend)
+                ;;
+            unset)
+                unset ${var_name}
+                export ${var_name} # is export needed to remove?
+                ;;
+                ?)
+                die "for_each_var_mode[${var_name}] is" \
+                    "invalid ($for_each_var_mode[${var_name}])"
+                ;;
+        esac
+    done
+
+    #echo "num_vars=$num_vars"
+
+    # for each set, execute next program in chain
+    for ((i = 0; i < for_each_var_count; ++i)); do
+        eval "$(printf "%s\n%s" "$(printVars $i)" "$*")"
+    done
+}
+
+main "$@"

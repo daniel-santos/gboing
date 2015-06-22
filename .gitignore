@@ -1,31 +1,17 @@
-# http://www.gnu.org/software/automake
-
-Makefile.in
-src/lib/Makefile.in
-src/test/Makefile.in
-
-# http://www.gnu.org/software/autoconf
-
-/autom4te.cache
-/aclocal.m4
-/compile
-/config.h.in
-/configure
-/depcomp
-/install-sh
-/missing
-/stamp-h1
-
-# Directories to hold auto-generated autotools stuff
-/autoscripts
-/m4
-
-# KDevelop
 gboing.kdev4
 .kdev_include_paths
 .kdev4
 
-# Currently unused
+aclocal.m4
+autom4te.cache
+config.h.in
+configure
+autoscripts
+m4
+
+Makefile.in
+src/lib/Makefile.in
+src/test/Makefile.in
 
 ChangeLog
 INSTALL

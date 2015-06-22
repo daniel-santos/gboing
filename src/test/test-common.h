@@ -1,6 +1,21 @@
 /*
- *
- * Some utility macros and functions lazily put into static form */
+ * test-common.h -- Some utility macros and functions lazily put into static form
+ * Copyright (C) 2015 Daniel Santos <daniel.santos@pobox.com>
+ * This file is part of gboing.
+
+ * gboing is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * gboing is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser Public License for more details.
+
+ * You should have received a copy of the GNU Lesser Public License
+ * along with gboing.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef _UTILS_H_
 #define _UTILS_H_
@@ -9,9 +24,10 @@
 #include <errno.h>
 #include <assert.h>
 
-#include "gboing/compiler.h"
+//#include "gboing/compiler.h"
 
-#if 0
+
+#if 1
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -21,114 +37,16 @@
 #include <assert.h>
 #endif
 
-#define gboing_finite_compare(a, b, type, align)  ({		\
-	const type *_a = assume_aligned((a), (align));		\
-	const type *_b = assume_aligned((b), (align));		\
-	*_a > *_b ? 1 : (*_a < *_b ? -1 : 0);			\
-})
-
-static __always_inline int my_cmp(const void *a, const void *b) {
-	if (ELEM_SIZE == 1)
-		return gboing_finite_compare(a, b, uint8_t, ALIGN_SIZE);
-	else if (ELEM_SIZE == 2)
-		return gboing_finite_compare(a, b, uint16_t, ALIGN_SIZE);
-	else if (ELEM_SIZE < 8)
-		return gboing_finite_compare(a, b, uint32_t, ALIGN_SIZE);
-	else
-		return gboing_finite_compare(a, b, uint64_t, ALIGN_SIZE);
-}
-
-static __always_inline int my_less(const void *a, const void *b) {
-	if (ELEM_SIZE == 1) {
-		const uint8_t *_a = __builtin_assume_aligned(a, ALIGN_SIZE);
-		const uint8_t *_b = __builtin_assume_aligned(b, ALIGN_SIZE);
-		return *_a < *_b;
-	} else if (ELEM_SIZE == 2) {
-		const uint16_t *_a = __builtin_assume_aligned(a, ALIGN_SIZE);
-		const uint16_t *_b = __builtin_assume_aligned(b, ALIGN_SIZE);
-		return *_a < *_b;
-	} else if (ELEM_SIZE < 8) {
-		const uint32_t *_a = __builtin_assume_aligned(a, ALIGN_SIZE);
-		const uint32_t *_b = __builtin_assume_aligned(b, ALIGN_SIZE);
-		return *_a < *_b;
-	} else {
-		const uint64_t *_a = __builtin_assume_aligned(a, ALIGN_SIZE);
-		const uint64_t *_b = __builtin_assume_aligned(b, ALIGN_SIZE);
-		return *_a < *_b;
-	}
-}
-
-static __always_inline int my_cmp_r(const void *a, const void *b, void *context) {
-	if (ELEM_SIZE == 1)
-		return gboing_finite_compare(a, b, uint8_t, ALIGN_SIZE);
-	else if (ELEM_SIZE == 2)
-		return gboing_finite_compare(a, b, uint16_t, ALIGN_SIZE);
-	else if (ELEM_SIZE < 8)
-		return gboing_finite_compare(a, b, uint32_t, ALIGN_SIZE);
-	else
-		return gboing_finite_compare(a, b, uint64_t, ALIGN_SIZE);
-}
-
-static __always_inline int my_less_r(const void *a, const void *b, void *context) {
-	if (ELEM_SIZE == 1) {
-		const uint8_t *_a = __builtin_assume_aligned(a, ALIGN_SIZE);
-		const uint8_t *_b = __builtin_assume_aligned(b, ALIGN_SIZE);
-		return *_a < *_b;
-	} else if (ELEM_SIZE == 2) {
-		const uint16_t *_a = __builtin_assume_aligned(a, ALIGN_SIZE);
-		const uint16_t *_b = __builtin_assume_aligned(b, ALIGN_SIZE);
-		return *_a < *_b;
-	} else if (ELEM_SIZE < 8) {
-		const uint32_t *_a = __builtin_assume_aligned(a, ALIGN_SIZE);
-		const uint32_t *_b = __builtin_assume_aligned(b, ALIGN_SIZE);
-		return *_a < *_b;
-	} else {
-		const uint64_t *_a = __builtin_assume_aligned(a, ALIGN_SIZE);
-		const uint64_t *_b = __builtin_assume_aligned(b, ALIGN_SIZE);
-		return *_a < *_b;
-	}
-}
+#define _do_error(fatal, err, file, line, fmt, ...)         \
+    error_at_line(fatal, err, file, line, "%s - " fmt,      \
+              __PRETTY_FUNCTION__, ## __VA_ARGS__)
+#define fatal_error(fmt, ...)                       \
+    _do_error(1, errno, __FILE__, __LINE__, fmt, ## __VA_ARGS__)
 
 
-#define _do_error(fatal, err, file, line, fmt, ...)			\
-	error_at_line(fatal, err, file, line, "%s - " fmt,		\
-		      __PRETTY_FUNCTION__, ## __VA_ARGS__)
-#define fatal_error(fmt, ...)						\
-	_do_error(1, errno, __FILE__, __LINE__, fmt, ## __VA_ARGS__)
-
-static void randomize(void *p, size_t n, size_t size, unsigned int seed) {
-	unsigned long *arr = p;
-	const size_t LONG_BITS = sizeof(unsigned long) * 8;
-	const size_t RAND_BITS = LONG_BITS - __builtin_clzl((unsigned long)RAND_MAX);
-	const size_t bytes = n * size;
-	const size_t count = bytes / sizeof(unsigned long);
-	size_t i;
-
-	//assert(!(bytes % sizeof(*arr)));
-	//assert(size == sizeof(*arr));
-
-	srandom(seed);
-
-	for (i = 0; i < count; ++i) {
-		size_t bits;
-
-		arr[i] = (unsigned long)random();
-
-		for (bits = RAND_BITS; bits < LONG_BITS; bits += RAND_BITS) {
-			arr[i] <<= RAND_BITS;
-			arr[i] ^= (unsigned long)random();
-		}
-//		arr[i] >>= 56;
-	}
-
-	/* if not aligned to size of long get the last few bytes */
-	for (i = 0; i < bytes % sizeof(*arr); ++i) {
-		((char *)p) [count * sizeof(*arr) + i] = random();
-	}
-}
 
 static inline void timespec_set(struct timespec *ts) {
-	if (unlikely(errno = clock_gettime(CLOCK_THREAD_CPUTIME_ID, ts)))
+	if (gboing_unlikely(errno = clock_gettime(CLOCK_THREAD_CPUTIME_ID, ts)))
 		fatal_error("clock_gettime");
 }
 
@@ -147,7 +65,7 @@ static inline struct timespec timespec_subtract(struct timespec a, struct timesp
 	return ret;
 }
 
-static inline struct timespec timespec_add(struct timespec a, struct timespec b) {
+static inline struct timespec timespec_add(const struct timespec a, const struct timespec b) {
 	const long ONE_BILLION = 1000000000ul;
 	struct timespec ret = {
 		.tv_sec  = a.tv_sec  + b.tv_sec,
@@ -162,11 +80,20 @@ static inline struct timespec timespec_add(struct timespec a, struct timespec b)
 	return ret;
 }
 
-static double time_pct(struct timespec *a, struct timespec *b) {
+static gboing_unused double timespec_pct(const struct timespec *a, const struct timespec *b) {
 	const double ONE_BILLION = 1000000000.;
 	double da = (double)a->tv_nsec + ONE_BILLION *a->tv_sec;
 	double db = (double)b->tv_nsec + ONE_BILLION *b->tv_sec;
 	return ((da / db) - 1.) * 100.;
+}
+
+static gboing_unused int timespec_lt(const struct timespec *a, const struct timespec *b) {
+    if (a->tv_sec < b->tv_sec)
+        return 1;
+    else if (a->tv_sec > b->tv_sec)
+        return 0;
+    else
+        return a->tv_nsec < b->tv_nsec;
 }
 
 #endif /* _UTILS_H_ */

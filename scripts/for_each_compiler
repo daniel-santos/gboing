@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ -z "${GBOING_SCRIPTS_DIR}" ]]; then
+    . $(dirname "$0")/gboing.sh || exit 1
+fi
+
+exec for_each_env -c "${GBOING_SCRIPTS_DIR}/compiler-base.conf" "$@"
